@@ -21,7 +21,7 @@ def carregar_configuracoes():
         "max_tokens": 800
     }
 
-    # 1️⃣ Primeiro tenta Streamlit Secrets
+    #Primeiro tenta Streamlit Secrets
     try:
         if "OPENAI_API_KEY" in st.secrets:
             config["api_key"] = st.secrets["OPENAI_API_KEY"]
@@ -30,7 +30,7 @@ def carregar_configuracoes():
     except Exception as e:
         print("DEBUG: st.secrets não disponível:", e)
 
-    # 2️⃣ Depois tenta variável de ambiente
+    #Depois tenta variável de ambiente
     chave_env = os.environ.get("OPENAI_API_KEY")
     if chave_env:
         config["api_key"] = chave_env.strip()
