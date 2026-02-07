@@ -74,13 +74,14 @@ st.set_page_config(
 #Funções principais
 
 def inicializar_openai(api_key):
-    """Inicializa o cliente da OpenAI SEM VERIFICAÇÕES."""
+    """Inicializa o cliente da OpenAI com LIMPEZA PESADA."""
     if not api_key:
         return None
     
     try:
-        # Limpa espaços e cria o cliente direto. Confia na chave.
-        client = OpenAI(api_key=api_key.strip())
+        chave_limpa = api_key.strip().replace('"', '').replace("'", "").replace("\n", "").replace("\r", "")
+        
+        client = OpenAI(api_key=chave_limpa)
         return client
     except Exception as e:
         print(f"Erro ao inicializar: {e}")
