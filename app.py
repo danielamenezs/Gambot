@@ -14,6 +14,13 @@ import unicodedata
 #Add o diretório atual ao path para importações
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
+# cnfiguração da página
+st.set_page_config(
+    page_title="Gambot",
+    page_icon="🎓",
+    layout="wide"
+)
+
 def carregar_configuracoes():
     """Carrega configurações de várias fontes possíveis."""
     
@@ -23,40 +30,18 @@ def carregar_configuracoes():
         "max_tokens": 800 # Tokens de resposta(saída)
     }
     
-    #tenta da variável de ambiente
+    # 1. Tenta pegar do Streamlit Cloud (Secrets) - PRIORIDADE
+    if "OPENAI_API_KEY" in st.secrets:
+        config["api_key"] = st.secrets["OPENAI_API_KEY"]
+        print(f"DEBUG: Chave carregada do Secrets")
+        return config
+
+    # 2. Tenta da variável de ambiente
     chave_env = os.environ.get("OPENAI_API_KEY")
     if chave_env and chave_env.strip():
         config["api_key"] = chave_env.strip()
-        print(f"DEBUG: Chave carregada do ambiente, comprimento: {len(config['api_key'])}")
+        print(f"DEBUG: Chave carregada do ambiente")
         return config
-    
-    #Tenta tb de arquivos .env em locais comuns
-    locais_arquivos = [
-        ".env",
-        "api_key.env",
-        os.path.join(os.path.dirname(__file__), ".env"),
-        os.path.join(os.path.dirname(__file__), "api_key.env"),
-        "config/.env", 
-        ".env.local",
-    ]
-    
-    for arquivo in locais_arquivos:
-        if os.path.exists(arquivo):
-            try:
-                print(f"Tentando carregar de: {arquivo}")
-                with open(arquivo, "r", encoding="utf-8") as f:
-                    for linha in f:
-                        linha = linha.strip()
-                        if linha.startswith("#") or not linha:
-                            continue
-                        if linha.startswith("OPENAI_API_KEY="):
-                            config["api_key"] = linha.split("=", 1)[1].strip().strip('"').strip("'")
-                            print(f"Chave encontrada em {arquivo}, comprimento: {len(config['api_key'])}")
-                        elif linha.startswith("MODEL="):
-                            config["modelo"] = linha.split("=", 1)[1].strip().strip('"').strip("'")
-            except Exception as e:
-                print(f"Erro ao ler {arquivo}: {e}")
-                continue
     
     return config
 
@@ -64,38 +49,22 @@ def carregar_configuracoes():
 CONFIG_INICIAL = carregar_configuracoes()
 print(f"DEBUG: Config carregada - Chave: {bool(CONFIG_INICIAL['api_key'])}, Modelo: {CONFIG_INICIAL['modelo']}")
 
-# cnfiguração da página
-st.set_page_config(
-    page_title="Gambot",
-    page_icon="🎓",
-    layout="wide"
-)
-
 #Funções principais
 
 def inicializar_openai(api_key):
     """Inicializa o cliente da OpenAI de forma segura."""
-    if not api_key or not api_key.strip():
-        print("DEBUG: API Key vazia ou apenas espaços.")
+    if not api_key:
+        print("DEBUG: API Key vazia.")
         return None
     
     try:
-        #remove possíveis espaços ou caracteres extras
-        chave_limpa = api_key.strip()
+        # Limpeza pesada para garantir que não tenha aspas ou quebras de linha
+        chave_limpa = api_key.strip().replace('"', '').replace("'", "").replace("\n", "").replace("\r", "")
         
-        #verifica se a chave parece válida
-        if not chave_limpa.startswith("sk-"):
-            #Tenta extrair a chave se estiver em texto maior
-            match = re.search(r'sk-[a-zA-Z0-9]{20,}', chave_limpa)
-            if match:
-                chave_limpa = match.group(0)
-            else:
-                return None
-        
-        #Inicializa o cliente
+        # Inicializa o cliente direto
         client = OpenAI(api_key=chave_limpa)
         
-        #Testa a conexão com uma chamada teste
+        # Testa a conexão com uma chamada teste
         try:
             client.models.list(timeout=5)
         except Exception as test_e:
