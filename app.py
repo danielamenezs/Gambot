@@ -538,7 +538,7 @@ def gerar_resposta_ia(pergunta, contexto, cliente_openai):
             ],
             temperature=0.3,
             max_tokens=CONFIG_INICIAL["max_tokens"],
-            timeout=45 
+            #timeout=45 
         )
         
         resposta = response.choices[0].message.content
