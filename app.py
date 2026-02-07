@@ -74,33 +74,32 @@ st.set_page_config(
 #Funções principais
 
 def inicializar_openai(api_key):
-    """Inicializa o cliente da OpenAI de forma segura."""
+    """Inicializa o cliente da OpenAI"""
     if not api_key or not api_key.strip():
         print("DEBUG: API Key vazia ou apenas espaços.")
         return None
     
     try:
-        #remove possíveis espaços ou caracteres extras
+        #Remove possíveis espaços ou caracteres extras
         chave_limpa = api_key.strip()
         
-        #verifica se a chave parece válida
-        if not chave_limpa.startswith("sk-"):
-            #Tenta extrair a chave se estiver em texto maior
-            match = re.search(r'sk-[a-zA-Z0-9]{20,}', chave_limpa)
-            if match:
-                chave_limpa = match.group(0)
-            else:
-                return None
+        if not (chave_limpa.startswith("sk-") and len(chave_limpa) > 20):
+             print(f"DEBUG: Chave parece inválida: {chave_limpa[:10]}...")
+             return None
         
-        #Inicializa o cliente
+        #Inicializa o cliente direto com a chave limpa
         client = OpenAI(api_key=chave_limpa)
         
-        #Testa a conexão com uma chamada teste
+        #Testa a conexão com uma chamada
         try:
             client.models.list(timeout=5)
         except Exception as test_e:
             print(f"DEBUG: Aviso no teste de conexão: {test_e}")
+            #Se der erro de autenticação aqui, a chave tá errada mesmo
+            if "authentication" in str(test_e).lower() or "api key" in str(test_e).lower():
+                return None
         
+        print("DEBUG: Cliente OpenAI inicializado com sucesso")
         return client
     except Exception as e:
         print(f"Erro ao inicializar OpenAI: {type(e).__name__}: {str(e)}")
