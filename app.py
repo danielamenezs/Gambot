@@ -15,20 +15,29 @@ import unicodedata
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 def carregar_configuracoes():
-    """Carrega configurações de várias fontes possíveis."""
-    
     config = {
         "api_key": "",
         "modelo": "gpt-4o-mini",
-        "max_tokens": 800 # Tokens de resposta(saída)
+        "max_tokens": 800
     }
-    
-    #tenta da variável de ambiente
+
+    # 1️⃣ Primeiro tenta Streamlit Secrets
+    try:
+        if "OPENAI_API_KEY" in st.secrets:
+            config["api_key"] = st.secrets["OPENAI_API_KEY"]
+            print("DEBUG: Chave carregada do st.secrets")
+            return config
+    except Exception as e:
+        print("DEBUG: st.secrets não disponível:", e)
+
+    # 2️⃣ Depois tenta variável de ambiente
     chave_env = os.environ.get("OPENAI_API_KEY")
-    if chave_env and chave_env.strip():
+    if chave_env:
         config["api_key"] = chave_env.strip()
-        print(f"DEBUG: Chave carregada do ambiente, comprimento: {len(config['api_key'])}")
+        print("DEBUG: Chave carregada do ambiente")
         return config
+
+    return config
     
     #Tenta tb de arquivos .env em locais comuns
     locais_arquivos = [
