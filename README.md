@@ -60,7 +60,7 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 
-⚙️ Configuração
+**⚙️ Configuração**
 
 Adicione seus PDFs Coloque os arquivos PDF (Regulamento, Grade, PPC) dentro da pasta data/.
 
